@@ -35,19 +35,12 @@ jobs:
     - name: Git Clone
       uses: actions/checkout@v4
 
-    - name: Check Nexus repo
-      uses: actions/checkout@v4
-      with:
-        repository: kimabigal/kimabigal-Project_SonatypeNexus
-        path: infra
-
     - name: Create tfvars file
-      working-directory: infra/Terraform/dev
       run: |
         cat <<EOF > terraform.tfvars
-        ami_id        = "${{ inputs.ami_id }}"
+        ami_id = "${{ inputs.ami_id }}"
         instance_type = "${{ inputs.instance_type }}"
-        region        = "${{ inputs.region }}"
+        region = "${{ inputs.region }}"
         EOF
 
     - name: Setup Terraform
@@ -60,14 +53,12 @@ jobs:
       with:
         aws-access-key-id: "${{ secrets.AWS_ACCESS_KEY_ID }}"
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: "${{ inputs.region }}"
+        aws-region: us-east-2
 
     - name: Init
-      working-directory: infra/Terraform/dev
       run: terraform init -backend-config=key="${{ inputs.region }}/terraform.tfstate"
 
     - name: Apply or Destroy
-      working-directory: infra/Terraform/dev
       run: |
         if [[ "${{ inputs.action }}" == "apply" ]]
         then

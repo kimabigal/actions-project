@@ -9,6 +9,7 @@ on:
         options:
         - apply
         - destroy
+
       environment:
         description: "Provide region"
         required: true
@@ -21,38 +22,19 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest # self-hosted
     environment: "${{ inputs.environment }}"
     steps:
-    - name: Checkout workflows repo
+    - name: Git Clone
       uses: actions/checkout@v4
-
-    - name: Checkout Nexus repo
-      uses: actions/checkout@v4
-      with:
-        repository: kimabigal/kimabigal-Project_SonatypeNexus
-        ref: main
-        fetch-depth: 1
-        path: infra
-
-    - name: Show repo layout (diagnostic)
-      run: |
-        echo "PWD: $(pwd)"
-        echo "---- top-level ----"
-        ls -la
-        echo "---- infra ----"
-        ls -la infra || true
-        echo "---- infra/Terraform/dev ----"
-        ls -la infra/Terraform/dev || true
 
     - name: Create tfvars file
-      working-directory: infra/Terraform/dev
-      run: printf "%s" "${{ vars.TFVARS }}" > terraform.tfvars
+      run: echo "${{ vars.TFVARS }}" > terraform.tfvars
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
       with:
-        terraform_version: "1.9.8"
+        terraform_version: "1.12.2"
 
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v4.3.1
@@ -62,17 +44,12 @@ jobs:
         aws-region: "${{ inputs.environment }}"
 
     - name: Init
-      working-directory: infra/Terraform/dev
       run: terraform init -backend-config=key="${{ inputs.environment }}/terraform.tfstate"
 
-    - name: Validate
-      working-directory: infra/Terraform/dev
-      run: terraform validate
-
     - name: Apply or Destroy
-      working-directory: infra/Terraform/dev
       run: |
-        if [[ "${{ inputs.action }}" == "apply" ]]; then
+        if [[ "${{ inputs.action }}" == "apply" ]]
+        then
           terraform apply -auto-approve
         else
           terraform destroy -auto-approve
