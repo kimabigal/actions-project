@@ -35,7 +35,7 @@ jobs:
         path: infra
 
     - name: Create tfvars file
-      working-directory: infra/Terraform
+      working-directory: infra/Terraform/dev
       run: echo "${{ vars.TFVARS }}" > terraform.tfvars
 
     - name: Setup Terraform
@@ -51,11 +51,11 @@ jobs:
         aws-region: "${{ inputs.environment }}"
 
     - name: Init
-      working-directory: infra/Terraform
+      working-directory: infra/Terraform/dev
       run: terraform init -backend-config=key="${{ inputs.environment }}/terraform.tfstate"
 
     - name: Apply or Destroy
-      working-directory: infra/Terraform
+      working-directory: infra/Terraform/dev
       run: |
         if [[ "${{ inputs.action }}" == "apply" ]]
         then
