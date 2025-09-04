@@ -9,7 +9,7 @@ on:
         options:
         - apply
         - destroy
-      region:
+      environment:
         description: "Provide region"
         required: true
         type: choice
@@ -18,17 +18,24 @@ on:
         - us-east-2
         - us-west-1
         - us-west-2
-        
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     environment: "${{ inputs.environment }}"
+
     steps:
-    - name: Git Clone
+    - name: Checkout this repo
       uses: actions/checkout@v4
 
-    - name: Create tfvars from enviroments
+    - name: Clone private Nexus repo
+      run: |
+        git clone --depth=1 \
+          "https://${{ secrets.INFRA_REPO_TOKEN }}@github.com/kimabigal/kimabigal-Project_SonatypeNexus.git" infra
+        ls -la infra/Terraform/dev || true
+
+    - name: Create tfvars from environment
+      working-directory: infra/Terraform/dev
       run: echo "${{ secrets.TFVARS }}" > terraform.tfvars
 
     - name: Setup Terraform
@@ -41,17 +48,17 @@ jobs:
       with:
         aws-access-key-id: "${{ secrets.AWS_ACCESS_KEY_ID }}"
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: "${{ inputs.region }}"
+        aws-region: "${{ inputs.environment }}"
 
     - name: Init
-      run: terraform init -backend-config=key="${{ inputs.region }}/terraform.tfstate"
+      working-directory: infra/Terraform/dev
+      run: terraform init -backend-config=key="${{ inputs.environment }}/terraform.tfstate"
 
     - name: Apply or Destroy
+      working-directory: infra/Terraform/dev
       run: |
-        if [[ "${{ inputs.action }}" == "apply" ]]
-        then
+        if [[ "${{ inputs.action }}" == "apply" ]]; then
           terraform apply -auto-approve
         else
           terraform destroy -auto-approve
         fi
-        
