@@ -38,7 +38,7 @@ jobs:
     - name: Clone private infra repo
       run: |
         git clone --depth=1 \
-          "https://oauth2:${{ secrets.INFRA_REPO_TOKEN }}@github.com/${{ vars.INFRA_REPO }}" infra
+          "https://oauth2:${{ secrets.INFRA_REPO_TOKEN }}@github.com/almazova09/project1-sonatype-nexus" infra
 
     - name: Create tfvars file
       working-directory: infra
