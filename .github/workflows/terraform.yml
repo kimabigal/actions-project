@@ -25,16 +25,20 @@ jobs:
     environment: "${{ inputs.environment }}"
 
     steps:
-    - name: git clone
+    - name: Checkout this repo (workflows)
       uses: actions/checkout@v4
 
-    - name: Clone private Nexus repo
-      run: |
-        git clone --depth=1 \
-          "https://${{ secrets.INFRA_REPO_TOKEN }}@github.com/kimabigal/kimabigal-Project_SonatypeNexus.git" infra
-        ls -la infra/Terraform/dev || true
+    # Clone private Nexus repo via SSH deploy key
+    - name: Checkout private Nexus repo
+      uses: actions/checkout@v4
+      with:
+        repository: kimabigal/kimabigal-Project_SonatypeNexus
+        ssh-key: ${{ secrets.DEPLOY_KEY }}   # add this secret in the workflows repo
+        path: infra
+        fetch-depth: 1
+        persist-credentials: false
 
-    - name: Create tfvars from environment
+    - name: Create tfvars from Environment secret
       working-directory: infra/Terraform/dev
       run: echo "${{ secrets.TFVARS }}" > terraform.tfvars
 
@@ -50,7 +54,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: "${{ inputs.environment }}"
 
-    - name: Init
+    - name: Init (env-scoped state key)
       working-directory: infra/Terraform/dev
       run: terraform init -backend-config=key="${{ inputs.environment }}/terraform.tfstate"
 
