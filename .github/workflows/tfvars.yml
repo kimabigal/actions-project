@@ -29,15 +29,15 @@ jobs:
     - name: Git Clone
       uses: actions/checkout@v4
 
-    - name: Clone private infra repo
-      run: |
-        git clone --depth=1 \
-          "https://oauth2:${{ secrets.INFRA_REPO_TOKEN }}@github.com/almazova09/project1-sonatype-nexus" infra
-
+    - name: Checkout Nexus repo
+      uses: actions/checkout@v4
+      with:
+        repository: kimabigal/kimabigal-Project_SonatypeNexus
+        path: infra
 
 
     - name: Create tfvars file
-      working-directory: infra
+      working-directory: infra/Terraform/dev
       run: echo "${{ vars.TFVARS }}" > terraform.tfvars
 
     - name: Setup Terraform
@@ -53,11 +53,11 @@ jobs:
         aws-region: "${{ inputs.environment }}"
 
     - name: Init
-      working-directory: infra
+      working-directory: infra/Terraform/dev
       run: terraform init -backend-config=key="${{ inputs.environment }}/terraform.tfstate"
 
     - name: Apply or Destroy
-      working-directory: infra
+      working-directory: infra/Terraform/dev
       run: |
         if [[ "${{ inputs.action }}" == "apply" ]]
         then

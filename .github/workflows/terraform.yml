@@ -35,13 +35,14 @@ jobs:
     - name: Git Clone
       uses: actions/checkout@v4
 
-    - name: Clone private infra repo
-      run: |
-        git clone --depth=1 \
-          "https://oauth2:${{ secrets.INFRA_REPO_TOKEN }}@github.com/almazova09/project1-sonatype-nexus" infra
+    - name: Check Nexus repo
+      uses: actions/checkout@v4
+      with:
+        repository: kimabigal/kimabigal-Project_SonatypeNexus
+        path: infra
 
     - name: Create tfvars file
-      working-directory: infra
+      working-directory: infra/Terraform/dev
       run: |
         cat <<EOF > terraform.tfvars
         ami_id        = "${{ inputs.ami_id }}"
@@ -62,11 +63,11 @@ jobs:
         aws-region: "${{ inputs.region }}"
 
     - name: Init
-      working-directory: infra
+      working-directory: infra/Terraform/dev
       run: terraform init -backend-config=key="${{ inputs.region }}/terraform.tfstate"
 
     - name: Apply or Destroy
-      working-directory: infra
+      working-directory: infra/Terraform/dev
       run: |
         if [[ "${{ inputs.action }}" == "apply" ]]
         then
