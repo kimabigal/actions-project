@@ -28,15 +28,13 @@ jobs:
     - name: Checkout this repo (workflows)
       uses: actions/checkout@v4
 
-    # Clone private Nexus repo via SSH deploy key
     - name: Checkout private Nexus repo
       uses: actions/checkout@v4
       with:
-        repository: kimabigal/kimabigal-Project_SonatypeNexus
-        ssh-key: ${{ secrets.DEPLOY_KEY }}   # add this secret in the workflows repo
+        repository: kimabigal/Project_SonatypeNexus   # ✅ corrected slug
+        token: ${{ secrets.INFRA_REPO_TOKEN }}        # PAT with repo read access
         path: infra
         fetch-depth: 1
-        persist-credentials: false
 
     - name: Create tfvars from Environment secret
       working-directory: infra/Terraform/dev
