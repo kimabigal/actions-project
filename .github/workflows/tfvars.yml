@@ -1,0 +1,66 @@
+name: Tfvars
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "Select your choice"
+        required: true
+        type: choice
+        options:
+        - apply
+        - destroy
+
+      environment:
+        description: "Provide region"
+        required: true
+        type: choice
+        options:
+        - us-east-1
+        - us-east-2
+        - us-west-1
+        - us-west-2
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest 
+    environment: "${{ inputs.environment }}"
+    steps:
+    - name: Git Clone
+      uses: actions/checkout@v4
+
+    - name: Clone private infra repo
+      run: |
+        git clone --depth=1 \
+          "https://oauth2:${{ secrets.INFRA_REPO_TOKEN }}@github.com/${{ vars.INFRA_REPO }}" infra
+
+
+    - name: Create tfvars file
+      working-directory: infra
+      run: echo "${{ vars.TFVARS }}" > terraform.tfvars
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: "1.12.2"
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v4.3.1
+      with:
+        aws-access-key-id: "${{ secrets.AWS_ACCESS_KEY_ID }}"
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: "${{ inputs.environment }}"
+
+    - name: Init
+      working-directory: infra
+      run: terraform init -backend-config=key="${{ inputs.environment }}/terraform.tfstate"
+
+    - name: Apply or Destroy
+      working-directory: infra
+      run: |
+        if [[ "${{ inputs.action }}" == "apply" ]]
+        then
+          terraform apply -auto-approve
+        else
+          terraform destroy -auto-approve
+        fi
