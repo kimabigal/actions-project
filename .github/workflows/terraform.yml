@@ -42,7 +42,7 @@ jobs:
         path: infra
 
     - name: Create tfvars file
-      working-directory: infra/Terraform/dev
+      working-directory: infra/Terraform
       run: |
         cat <<EOF > terraform.tfvars
         ami_id        = "${{ inputs.ami_id }}"
@@ -63,11 +63,11 @@ jobs:
         aws-region: "${{ inputs.region }}"
 
     - name: Init
-      working-directory: infra/Terraform/dev
+      working-directory: infra/Terraform
       run: terraform init -backend-config=key="${{ inputs.region }}/terraform.tfstate"
 
     - name: Apply or Destroy
-      working-directory: infra/Terraform/dev
+      working-directory: infra/Terraform
       run: |
         if [[ "${{ inputs.action }}" == "apply" ]]
         then
