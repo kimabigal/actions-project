@@ -9,8 +9,6 @@ on:
         options:
         - apply
         - destroy
-
-
       region:
         description: "Provide region"
         required: true
@@ -21,28 +19,17 @@ on:
         - us-west-1
         - us-west-2
         
-      ami_id:
-        description: "Provide AMI ID"
-        required: true
-
-      instance_type:
-        description: "Provide Instance Type"
-        required: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment: "${{ inputs.environment }}"
     steps:
     - name: Git Clone
       uses: actions/checkout@v4
 
-    - name: Create tfvars file
-      run: |
-        cat <<EOF > terraform.tfvars
-        ami_id = "${{ inputs.ami_id }}"
-        instance_type = "${{ inputs.instance_type }}"
-        region = "${{ inputs.region }}"
-        EOF
+    - name: Create tfvars from enviroments
+      run: echo "${{ secrets.TFVARS }}" > terraform.tfvars
 
     - name: Setup Terraform
       uses: hashicorp/setup-terraform@v3
